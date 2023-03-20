@@ -2,7 +2,7 @@
 
 # use traditional way for conda environment
 source /opt/anaconda3/etc/profile.d/conda.sh
-conda activate alphafold
+conda activate alphafold_2.3
 
 
 #setting environment for cuda-11.0 gpu2-5
@@ -30,11 +30,12 @@ usage() {
         # edited by Yinying
         echo "-m <model_preset>  Choose preset model configuration - the monomer model, the monomer model with extra ensembling, monomer model with pTM head, or multimer model"
         echo "-n <num_multimer_predictions_per_model>       How many predictions (each with a different random seed) will be generated per model"
-        echo "-j <nproc>       How many processors (each with a different random seed) will be used in the feature construction"
-        echo "-t <template_date> Maximum template release date to consider (ISO-8601 format - i.e. YYYY-MM-DD). Important if folding historical test sets"
-        echo "-p <pretrained_data_date> Pretrained data release date to consider (ISO-8601 format - i.e. YYYY-MM-DD). Important if folding historical test sets"
-        echo "-r <run_relax> Pretrained data release date to consider (ISO-8601 format - i.e. YYYY-MM-DD). Important if folding historical test sets"
-        echo "-c <clean_run>                                Make a clean run, full results (massive pkls) will be deleted"
+        echo "-j <nproc>  How many processors (each with a different random seed) will be used in the feature construction. Default: 8"
+        echo "-t <template_date>  Maximum template release date to consider (ISO-8601 format - i.e. YYYY-MM-DD). Important if folding historical test sets. Default: 2023-03-15"
+        echo "-e <num_ensemble>  Ensemble Number for pre-inference"
+        echo "-p <pretrained_data_date> Pretrained data release date to consider (ISO-8601 format - i.e. YYYY-MM-DD). Important if folding historical test sets. Default: 2022-12-06 "
+        echo "-r <run_relax>  Run relax to {best, all, none} model(s). Default: best"
+        echo "-c <clean_run>  Make a clean run, full results (massive pkls) will be deleted. Default: false"
         echo ""
         exit 1
 }
@@ -76,7 +77,7 @@ while getopts ":m:t:n:e:j:p:r:c:" i; do
 done
 
 if [[ "$max_template_date" == "" ]] ; then
-    max_template_date=2021-10-30
+    max_template_date=2023-03-15
 fi
 
 if [[ "$max_template_date" == "no" ]] ; then
@@ -85,7 +86,7 @@ fi
 
 
 if [[ "$pretrained_data_date" == ""  ]] ; then
-    pretrained_data_date=2022-03-02
+    pretrained_data_date=2022-12-06
 elif [[ ! -d ${pretrained_data_dir}/${pretrained_data_date}/ ]];then
             echo "ERROR: Unknown pretrained_data_date ${pretrained_data_date} or the pretrained_data_dir ${pretrained_data_dir} inaccessible. "
             usage
@@ -104,19 +105,17 @@ if [[ "$nproc" == "" ]] ; then
 fi
 
 # set default num_ensemble
-if [[ "$model_preset" == "monomer" || "$model_preset" == "monomer_ptm" || "$model_preset" == "multimer" ]] ; then
+if [[ "$model_preset" == "monomer" || "$model_preset" == "monomer_ptm" || "$model_preset" =~ "multimer" ]] ; then
     if [[ "$num_ensemble" == "" ]] ; then
         num_ensemble=1
     fi
-fi
-
-if [[ "$model_preset" == "monomer_casp14"  ]] ; then
+elif [[ "$model_preset" == "monomer_casp14"  ]] ; then
     if [[ "$num_ensemble" == "" ]] ; then
         num_ensemble=8
     fi
 fi
 
-if [[ "$model_preset" == "multimer" ]] ; then
+if [[ "$model_preset" =~ "multimer" ]] ; then
     if [[ "$num_multimer_predictions_per_model" == "" ]];then
         num_multimer_predictions_per_model=2
     fi
@@ -124,10 +123,10 @@ else
     num_multimer_predictions_per_model=1
 fi
 
-if [[ "$run_relax" == "" || "$run_relax" == "true" || "$run_relax" == "yes" ]] ; then
-    run_relax=true
+if [[ "$run_relax" == "all" || "$run_relax" == "best" || "$run_relax" == "none" ]];then
+    run_relax=$run_relax
 else
-    run_relax=false
+  run_relax=best
 fi
 
 
@@ -137,9 +136,10 @@ else
     clean_run=true
 fi
 
-if [[ "$model_preset" != "monomer" && "$model_preset" != "monomer_casp14" && "$model_preset" != "monomer_ptm" && "$model_preset" != "multimer" ]] ; then
+if [[ "$model_preset" != "monomer" && "$model_preset" != "monomer_casp14" && "$model_preset" != "monomer_ptm" && ! "$model_preset" =~ "multimer" ]] ; then
     echo "Unknown model_preset! "
     usage
+
 fi
 
 
