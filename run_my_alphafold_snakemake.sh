@@ -31,7 +31,7 @@ usage() {
         echo "-f <fasta>  input fasta file"
         echo "-m <model_preset>  Choose preset model configuration - the monomer model, the monomer model with extra ensembling, monomer model with pTM head, or multimer model"
         echo "-n <num_multimer_predictions_per_model>       How many predictions (each with a different random seed) will be generated per model"
-        echo "-j <nproc>  How many processors (each with a different random seed) will be used in the feature construction. Default: 8"
+        echo "-j <nproc>  How many processors will be used in the feature construction. Default: 8"
         echo "-t <template_date>  Maximum template release date to consider (ISO-8601 format - i.e. YYYY-MM-DD). Important if folding historical test sets. Default: 2023-03-15"
         echo "-e <num_ensemble>  Ensemble Number for pre-inference"
         echo "-p <pretrained_data_date> Pretrained data release date to consider (ISO-8601 format - i.e. YYYY-MM-DD). Important if folding historical test sets. Default: 2022-12-06 "
