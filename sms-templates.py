@@ -35,22 +35,16 @@ def sms_remote(phone,name,job, time,total,fin,rest ):
     print(str(response, encoding='utf-8'))
 
 
-phones={
-        "user1":"phone1",
-        "user2":"phone2",
-        "user3":"phone3",
-        }
 
-    
 
 
 if __name__ == '__main__':
     who=sys.argv[1]
-    job=sys.argv[2]
-    total=sys.argv[3]
-    fin=sys.argv[4]
-    rest=sys.argv[5]
+    phone=sys.argv[2]
+    job=sys.argv[3]
+    total=sys.argv[4]
+    fin=sys.argv[5]
+    rest=sys.argv[6]
     time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-    phone=phones[who]
     sms_remote(phone,who,job,time,total,fin,rest)
 
