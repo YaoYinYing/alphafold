@@ -244,7 +244,7 @@ if [[ "$fasta" == "" || ! -f $(readlink -f ${fasta}) ]]; then
     AF_process $dir $i && let fin++ && let rest-- && mv $dir/$i $dir/processed
     # mv $dir/$i $dir/processed;
     echo Sending final notify ....
-    python $af_official_repo/sms.py "$(whoami)" ""$(awk -F'[/:]' -v user=$(whoami) '{if ($1 == user && $3 >= 1000 && $3 != 65534) print $5}' /etc/passwd)"" "$(basename $dir)" $total $fin $rest
+    python $af_official_repo/sms.py "$(whoami)" "$(awk -F'[/:]' -v user=$(whoami) '{if ($1 == user && $3 >= 1000 && $3 != 65534) print $5}' /etc/passwd)" "$(basename $dir)" $total $fin $rest
   done
 else
   fasta=$(readlink -f ${fasta})
