@@ -7,7 +7,7 @@ SOFTWARE_PATH='/software'
 DB_PATH='/mnt/db/'
 
 # basic tools
-apt-get -y aria2
+apt-get -y install aria2
 
 mkdir -p $SOFTWARE_PATH
 
