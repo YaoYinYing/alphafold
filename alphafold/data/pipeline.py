@@ -29,6 +29,7 @@ import numpy as np
 
 # added by Yinying
 import multiprocessing
+from joblib import Parallel, delayed
 
 # Internal import (7716).
 
@@ -176,6 +177,9 @@ class DataPipeline:
     def parallel_msa(self,func,input_args: list,num_threads: int):
         p = multiprocessing.Pool(len(input_args) if num_threads >= 4 else num_threads)
         return p.map(func,input_args)
+    
+    def parallel_msa_joblib(self, func, input_args: list, num_threads: int):
+        return Parallel(n_jobs=num_threads)(delayed(func)(args) for args in input_args)
 
     def process(self,
                 input_fasta_path: str,
@@ -239,7 +243,7 @@ class DataPipeline:
                 jackhmmer_mgnify_result,
                 jackhmmer_small_bfd_result,
                 other_msa_task
-            ] = self.parallel_msa(func=run_msa_tool,
+            ] = self.parallel_msa_joblib(func=run_msa_tool,
                                   input_args=[
                                       self.jackhmmer_uniref90_args,
                                       self.jackhmmer_mgnify_args,
@@ -256,7 +260,7 @@ class DataPipeline:
                 jackhmmer_mgnify_result,
                 hhblits_bfd_uniref_result,
                 other_msa_task
-            ] = self.parallel_msa(func=run_msa_tool,
+            ] = self.parallel_msa_joblib(func=run_msa_tool,
                                   input_args=[
                                       self.jackhmmer_uniref90_args,
                                       self.jackhmmer_mgnify_args,

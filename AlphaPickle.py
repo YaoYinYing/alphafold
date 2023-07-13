@@ -42,6 +42,8 @@ from sys import exit
 import numpy as np
 import pandas as pd
 from Bio import PDB as pdb
+import matplotlib
+matplotlib.use('Agg')
 from matplotlib import pyplot as plt
 
 

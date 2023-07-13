@@ -214,11 +214,11 @@ AF_process() {
 
       #cp $decoy_name/ranked_0.pdb $res_dir/best_model/${decoy_name}_ranked_0.pdb &&
       echo Collecting results files .... &&
-        tar jcf $decoy_name\_AF2_lite.tar.bz2 --exclude *.pkl --exclude $decoy_name/msas $decoy_name &&
+        tar jcf $decoy_name\_AF2_lite.tar.bz2 --exclude *.pkl $decoy_name &&
         mv $decoy_name\_AF2_lite.tar.bz2 $res_dir/lite
       if [[ "$clean_run" == "false" ]]; then
         tar jcf $decoy_name\_AF2_full.tar.bz2 --remove-files $decoy_name &&
-          mv $decoy_name\_AF2_full.tar.bz2 $res_dir/full
+          mv $decoy_name\_AF2_full.tar.bz2 $res_dir/full &
       else
         rm -rf $decoy_name
       fi
@@ -243,9 +243,11 @@ if [[ "$fasta" == "" || ! -f $(readlink -f ${fasta}) ]]; then
     # run processing ...
     AF_process $dir $i && let fin++ && let rest-- && mv $dir/$i $dir/processed
     # mv $dir/$i $dir/processed;
-    echo Sending final notify ....
-    python $af_official_repo/sms.py "$(whoami)" "$(awk -F'[/:]' -v user=$(whoami) '{if ($1 == user && $3 >= 1000 && $3 != 65534) print $5}' /etc/passwd)" "$(basename $dir)" $total $fin $rest
+    #echo Sending final notify ....
+    #python $af_official_repo/sms.py "$(whoami)" "$(awk -F'[/:]' -v user=$(whoami) '{if ($1 == user && $3 >= 1000 && $3 != 65534) print $5}' /etc/passwd)" "$(basename $dir)" $total $fin $rest
   done
+  echo Sending final notify ....
+  python $af_official_repo/sms.py "$(whoami)" "$(awk -F'[/:]' -v user=$(whoami) '{if ($1 == user && $3 >= 1000 && $3 != 65534) print $5}' /etc/passwd)" "$(basename $dir)" $total $fin $rest
 else
   fasta=$(readlink -f ${fasta})
   echo "run alphafold to ${fasta}"
