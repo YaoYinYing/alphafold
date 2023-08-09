@@ -42,7 +42,7 @@ setup(
         'numpy==1.21.6',
         'pandas==1.3.4',
         'protobuf==3.20.1',
-        'scipy==1.7.0',
+        'scipy==1.7.3',
         'tensorflow-cpu==2.9.0'
     ],
     tests_require=[
