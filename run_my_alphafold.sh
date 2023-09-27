@@ -88,32 +88,14 @@ elif [[ ! -d ${pretrained_data_dir}/${pretrained_data_date}/ ]]; then
 
 fi
 
-# edited by Yinying
-if [[ "$model_preset" == "" ]]; then
-  model_preset="monomer"
-fi
-
 if [[ "$nproc" == "" ]]; then
   nproc=8
 fi
 
-# set default num_ensemble
-if [[ "$model_preset" == "monomer" || "$model_preset" == "monomer_ptm" || "$model_preset" =~ "multimer" ]]; then
-  if [[ "$num_ensemble" == "" ]]; then
-    num_ensemble=1
-  fi
-elif [[ "$model_preset" == "monomer_casp14" ]]; then
-  if [[ "$num_ensemble" == "" ]]; then
-    num_ensemble=8
-  fi
-fi
 
-if [[ "$model_preset" =~ "multimer" ]]; then
-  if [[ "$num_multimer_predictions_per_model" == "" ]]; then
-    num_multimer_predictions_per_model=2
-  fi
-else
-  num_multimer_predictions_per_model=1
+# edited by Yinying
+if [[ "$model_preset" == "" ]]; then
+  model_preset="auto"
 fi
 
 if [[ "$run_relax" == "all" || "$run_relax" == "best" || "$run_relax" == "none" ]]; then
@@ -128,7 +110,10 @@ else
   clean_run=true
 fi
 
-if [[ "$model_preset" != "monomer" && "$model_preset" != "monomer_casp14" && "$model_preset" != "monomer_ptm" && ! "$model_preset" =~ "multimer" ]]; then
+
+
+
+if [[ "$model_preset" != "auto" && "$model_preset" != "monomer" && "$model_preset" != "monomer_casp14" && "$model_preset" != "monomer_ptm" && ! "$model_preset" =~ "multimer" ]]; then
   echo "Unknown model_preset! "
   usage
 fi
@@ -145,9 +130,43 @@ mkdir $res_dir/full
 mkdir $dir/processed
 
 AF_process() {
+
   local dir=$1
   local i=$2
   local decoy_name=${i%.fasta}
+
+  num_sequence_per_fasta=$(grep '^>' $dir/$i |wc -l)
+
+  if [[ "$model_preset" == "auto" ]]; then
+    if [[ $num_sequence_per_fasta -eq 1 ]]; then 
+      model_preset="monomer"
+    else
+       model_preset="multimer"
+    fi
+  fi
+
+  echo "Setting model_preset to $model_preset due to sequence number $num_sequence_per_fasta in file $dir/$i"
+
+  # set default num_ensemble
+  if [[ "$model_preset" == "monomer" || "$model_preset" == "monomer_ptm" || "$model_preset" =~ "multimer" ]]; then
+    if [[ "$num_ensemble" == "" ]]; then
+      num_ensemble=1
+    fi
+  elif [[ "$model_preset" == "monomer_casp14" ]]; then
+    if [[ "$num_ensemble" == "" ]]; then
+      num_ensemble=8
+    fi
+  fi
+
+  if [[ "$model_preset" =~ "multimer" ]]; then
+    if [[ "$num_multimer_predictions_per_model" == "" ]]; then
+      num_multimer_predictions_per_model=2
+    fi
+  else
+    num_multimer_predictions_per_model=1
+  fi
+
+
   if [[ "$decoy_name" == "" ]]; then
     echo "decoy_name ${decoy_name} is not valid!"
     exit 1
