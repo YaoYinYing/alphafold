@@ -40,28 +40,48 @@ RAW_DIR="${ROOT_DIR}/raw"
 MMCIF_DIR="${ROOT_DIR}/mmcif_files"
 
 echo "Running rsync to fetch all mmCIF files (note that the rsync progress estimate might be inaccurate)..."
-echo "If the download speed is too slow, try changing the mirror to:"
-echo "  * rsync.ebi.ac.uk::pub/databases/pdb/data/structures/divided/mmCIF/ (Europe)"
-echo "  * ftp.pdbj.org::ftp_data/structures/divided/mmCIF/ (Asia)"
-echo "or see https://www.wwpdb.org/ftp/pdb-ftp-sites for more download options."
 mkdir --parents "${RAW_DIR}"
 #rsync --recursive --links --perms --times --compress --info=progress2 --delete --port=33444 \
 #  rsync.rcsb.org::ftp_data/structures/divided/mmCIF/ \
 #rsync -avz --delete data.pdbj.org::ftp_data/structures/divided/mmCIF/  "${RAW_DIR}"
-# self-managed mirror with weekly updates to PDBj.
-rsync --recursive --links --perms --times --compress --info=progress2 --delete git.yaoyy.moe::db/pdb_mmcif/raw "${RAW_DIR}"
+echo rsync --compress --info=progress2 --delete --recursive --links  --perms --times ftp.pdbj.org::ftp_data/structures/divided/mmCIF/ "${RAW_DIR}"
+
+echo "++++++++++++++++++++++++++++++++++++++++"
 
 echo "Unzipping all mmCIF files..."
-find "${RAW_DIR}/" -type f -iname "*.gz" -exec gunzip -k {} +
+#find "${RAW_DIR}/" -type f -iname "*.gz" -exec gunzip - {} +
 
 echo "Flattening all mmCIF files..."
 mkdir --parents "${MMCIF_DIR}"
-find "${RAW_DIR}" -type d -empty -delete  # Delete empty directories.
+counter=0
+#find "${RAW_DIR}" -type d -empty -delete  # Delete empty directories.
+
+
 for subdir in "${RAW_DIR}"/*; do
-  mv "${subdir}/"*.cif "${MMCIF_DIR}"
+  _counter=0
+
+  parallel --link --jobs $(nproc) -k -v  \
+  if [[ ! -f "${MMCIF_DIR}/{/.}" ]] ';' then \
+   gunzip -k "{}" ';' \
+  fi ::: "${subdir}/"*.cif.gz 2>/dev/null 1>/dev/null;
+
+    _counter=$(ls ${subdir} |grep -e ".cif$" | wc -l )
+    if [[ $_counter -gt 0  ]];then
+      counter=$(echo ${counter}+${_counter} |bc)
+      echo "Find $_counter updated cif files in $(basename ${subdir})" ;
+      mv "${subdir}/"*.cif "${MMCIF_DIR}"
+    else
+      echo "No updated cif in $(basename ${subdir})";
+    fi
+    #mv "${subdir}/"*.cif "${MMCIF_DIR}" || continue
 done
+echo "================================="
+echo  "$counter mmcif files is updated."
 
 # Delete empty download directory structure.
 #find "${RAW_DIR}" -type d -empty -delete
 
-aria2c "https://files.wwpdb.org/pub/pdb/data/status/obsolete.dat" --dir="${ROOT_DIR}"
+#if [  -f "${ROOT_DIR}/obsolete*.dat" ]; then rm -f "${ROOT_DIR}/obsolete*.dat";fi
+
+# update obsolete files
+aria2c "ftp://ftp.wwpdb.org/pub/pdb/data/status/obsolete.dat" --dir="${ROOT_DIR}" --allow-overwrite
