@@ -322,7 +322,7 @@ class AlphaFold(hk.Module):
           'prev_msa_first_row': ret['representations']['msa_first_row'],
           'prev_pair': ret['representations']['pair'],
       }
-      return jax.tree_map(jax.lax.stop_gradient, new_prev)
+      return jax.tree.map(jax.lax.stop_gradient, new_prev)
 
     def do_call(prev,
                 recycle_idx,
@@ -333,12 +333,12 @@ class AlphaFold(hk.Module):
           start = recycle_idx * num_ensemble
           size = num_ensemble
           return jax.lax.dynamic_slice_in_dim(x, start, size, axis=0)
-        ensembled_batch = jax.tree_map(slice_recycle_idx, batch)
+        ensembled_batch = jax.tree.map(slice_recycle_idx, batch)
       else:
         num_ensemble = batch_size
         ensembled_batch = batch
 
-      non_ensembled_batch = jax.tree_map(lambda x: x, prev)
+      non_ensembled_batch = jax.tree.map(lambda x: x, prev)
 
       return impl(
           ensembled_batch=ensembled_batch,
@@ -556,10 +556,11 @@ class Attention(hk.Module):
 
     Arguments:
       q_data: A tensor of queries, shape [batch_size, N_queries, q_channels].
-      m_data: A tensor of memories from which the keys and values are
-        projected, shape [batch_size, N_keys, m_channels].
-      mask: A mask for the attention, shape [batch_size, N_queries, N_keys].
-      nonbatched_bias: Shared bias, shape [N_queries, N_keys].
+      m_data: A tensor of memories from which the keys and values are projected,
+        shape [batch_size, N_keys, m_channels].
+      mask: A mask for the attention, shape [batch_size, N_heads, N_queries,
+        N_keys].
+      nonbatched_bias: Shared bias, shape [N_heads, N_queries, N_keys].
 
     Returns:
       A float32 tensor of shape [batch_size, N_queries, output_dim].
@@ -1004,7 +1005,7 @@ class MaskedMsaHead(hk.Module):
     Returns:
       Dictionary containing:
         * 'logits': logits of shape [N_seq, N_res, N_aatype] with
-            (unnormalized) log probabilies of predicted aatype at position.
+            (unnormalized) log probabilities of predicted aatype at position.
     """
     del batch
     logits = common_modules.Linear(
@@ -1048,7 +1049,7 @@ class PredictedLDDTHead(hk.Module):
     Returns:
       Dictionary containing :
         * 'logits': logits of shape [N_res, N_bins] with
-            (unnormalized) log probabilies of binned predicted lDDT.
+            (unnormalized) log probabilities of binned predicted lDDT.
     """
     act = representations['structure_module']
 

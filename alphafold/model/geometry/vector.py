@@ -34,7 +34,7 @@ class Vec3Array:
 
   This is done in order to improve performance and precision.
   On TPU small matrix multiplications are very suboptimal and will waste large
-  compute ressources, furthermore any matrix multiplication on tpu happen in
+  compute resources, furthermore any matrix multiplication on tpu happen in
   mixed bfloat16/float32 precision, which is often undesirable when handling
   physical coordinates.
   In most cases this will also be faster on cpu's/gpu's since it allows for
@@ -53,25 +53,25 @@ class Vec3Array:
       assert all([x == z for x, z in zip(self.x.shape, self.z.shape)])
 
   def __add__(self, other: Vec3Array) -> Vec3Array:
-    return jax.tree_map(lambda x, y: x + y, self, other)
+    return jax.tree.map(lambda x, y: x + y, self, other)
 
   def __sub__(self, other: Vec3Array) -> Vec3Array:
-    return jax.tree_map(lambda x, y: x - y, self, other)
+    return jax.tree.map(lambda x, y: x - y, self, other)
 
   def __mul__(self, other: Float) -> Vec3Array:
-    return jax.tree_map(lambda x: x * other, self)
+    return jax.tree.map(lambda x: x * other, self)
 
   def __rmul__(self, other: Float) -> Vec3Array:
     return self * other
 
   def __truediv__(self, other: Float) -> Vec3Array:
-    return jax.tree_map(lambda x: x / other, self)
+    return jax.tree.map(lambda x: x / other, self)
 
   def __neg__(self) -> Vec3Array:
-    return jax.tree_map(lambda x: -x, self)
+    return jax.tree.map(lambda x: -x, self)
 
   def __pos__(self) -> Vec3Array:
-    return jax.tree_map(lambda x: x, self)
+    return jax.tree.map(lambda x: x, self)
 
   def cross(self, other: Vec3Array) -> Vec3Array:
     """Compute cross product between 'self' and 'other'."""
