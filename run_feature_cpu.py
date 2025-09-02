@@ -22,7 +22,7 @@ import random
 import shutil
 import sys
 import time
-from typing import Any, Dict, Mapping, Union
+from typing import Any, Dict, Union
 
 from absl import app
 from absl import flags
@@ -185,7 +185,7 @@ def predict_structure(
     # model_runners: Dict[str, model.RunModel],
     # amber_relaxer: relax.AmberRelaxation,
     # benchmark: bool,
-    random_seed: int,
+    # random_seed: int,
     # models_to_relax: ModelsToRelax
 ):
   """Predicts structure using AlphaFold for the given sequence."""
@@ -209,6 +209,9 @@ def predict_structure(
   features_output_path = os.path.join(output_dir, 'features.pkl')
   with open(features_output_path, 'wb') as f:
     pickle.dump(feature_dict, f, protocol=4)
+
+  print(f'Feature dict is dumped at {features_output_path}')
+  print('Bye-bye.')
 
   # edited by Yinying
   """
@@ -463,7 +466,7 @@ def main(argv):
         # model_runners=model_runners,
         # amber_relaxer=amber_relaxer,
         # benchmark=FLAGS.benchmark,
-        random_seed=random_seed,
+        # random_seed=random_seed,
         # models_to_relax=FLAGS.models_to_relax
     )
 

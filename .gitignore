@@ -1,3 +1,6 @@
 
 .DS_Store
 sms.py
+**/**.pyc
+
+**/**/__pycache__

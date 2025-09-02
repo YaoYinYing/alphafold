@@ -1,8 +1,7 @@
 #!/bin/bash
 
 # use traditional way for conda environment
-source /opt/anaconda3/etc/profile.d/conda.sh
-conda activate alphafold_2.3
+source activate alphafold
 
 # User configuration
 db_dir=/mnt/db
@@ -10,7 +9,7 @@ pretrained_data_dir=/mnt/db/weights/alphafold/
 
 # automatically determined directory
 af_official_repo=$(readlink -f $(dirname $0))
-dir=$PWD
+dir=$(readlink -f $PWD)
 
 out_dir=$dir/output
 res_dir=$dir/res
@@ -172,7 +171,7 @@ AF_process() {
     exit 1
   fi
 
-  cd $af_official_repo # fix error caused by some path configs.
+  # cd $af_official_repo # fix error caused by some path configs.
   if [ ! -f $res_dir/lite/$decoy_name\_AF2_lite.tar.bz2 ]; then
     # not started yet??
     if [ ! -f $out_dir/$decoy_name/features.pkl ]; then
@@ -266,7 +265,7 @@ if [[ "$fasta" == "" || ! -f $(readlink -f ${fasta}) ]]; then
     #python $af_official_repo/sms.py "$(whoami)" "$(awk -F'[/:]' -v user=$(whoami) '{if ($1 == user && $3 >= 1000 && $3 != 65534) print $5}' /etc/passwd)" "$(basename $dir)" $total $fin $rest
   done
   echo Sending final notify ....
-  python $af_official_repo/sms.py "$(whoami)" "$(awk -F'[/:]' -v user=$(whoami) '{if ($1 == user && $3 >= 1000 && $3 != 65534) print $5}' /etc/passwd)" "$(basename $dir)" $total $fin $rest
+  # python $af_official_repo/sms.py "$(whoami)" "$(awk -F'[/:]' -v user=$(whoami) '{if ($1 == user && $3 >= 1000 && $3 != 65534) print $5}' /etc/passwd)" "$(basename $dir)" $total $fin $rest
 else
   fasta=$(readlink -f ${fasta})
   echo "run alphafold to ${fasta}"
@@ -276,8 +275,6 @@ else
   echo "We are now in $dir"
   AF_process $dir $fasta_fn
   wait
-  echo Sending final notify ....
-  python $af_official_repo/sms.py "$(whoami)" "$(awk -F'[/:]' -v user=$(whoami) '{if ($1 == user && $3 >= 1000 && $3 != 65534) print $5}' /etc/passwd)" "$(basename $fasta)" 1 1 0
 fi
 
 wait

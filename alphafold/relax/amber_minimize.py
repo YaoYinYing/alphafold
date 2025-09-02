@@ -19,18 +19,27 @@ import time
 from typing import Collection, Optional, Sequence
 
 from absl import logging
+
+import ml_collections
+import numpy as np
+import jax
+
+import faulthandler
+faulthandler.enable() 
+
+from openmm import LangevinIntegrator
+from openmm import Platform
+from openmm import unit
+from openmm import System
+from openmm import CustomExternalForce
+from openmm import app as openmm_app
+from openmm.app.internal.pdbstructure import PdbStructure
+
 from alphafold.common import protein
 from alphafold.common import residue_constants
 from alphafold.model import folding
 from alphafold.relax import cleanup
 from alphafold.relax import utils
-import ml_collections
-import numpy as np
-import jax
-import openmm
-from openmm import unit
-from openmm import app as openmm_app
-from openmm.app.internal.pdbstructure import PdbStructure
 
 
 ENERGY = unit.kilocalories_per_mole
@@ -47,7 +56,7 @@ def will_restrain(atom: openmm_app.Atom, rset: str) -> bool:
 
 
 def _add_restraints(
-    system: openmm.System,
+    system: System,
     reference_pdb: openmm_app.PDBFile,
     stiffness: unit.Unit,
     rset: str,
@@ -55,7 +64,7 @@ def _add_restraints(
   """Adds a harmonic potential that restrains the system to a structure."""
   assert rset in ["non_hydrogen", "c_alpha"]
 
-  force = openmm.CustomExternalForce(
+  force = CustomExternalForce(
       "0.5 * k * ((x-x0)^2 + (y-y0)^2 + (z-z0)^2)")
   force.addGlobalParameter("k", stiffness)
   for p in ["x0", "y0", "z0"]:
@@ -91,10 +100,10 @@ def _openmm_minimize(
   if stiffness > 0 * ENERGY / (LENGTH**2):
     _add_restraints(system, pdb, stiffness, restraint_set, exclude_residues)
 
-  integrator = openmm.LangevinIntegrator(0, 0.01, 0.0)
+  integrator = LangevinIntegrator(0, 0.01, 0.0)
   device = "CUDA" if use_gpu else "CPU"
   logging.info(f'using {device} for amber relax.')
-  platform = openmm.Platform.getPlatformByName(device)
+  platform = Platform.getPlatformByName(device)
   simulation = openmm_app.Simulation(
       pdb.topology, system, integrator, platform)
   simulation.context.setPositions(pdb.positions)
